@@ -1,11 +1,11 @@
 const fs = require('fs');
+// const fileDBname = 'fullFigureList.json';
+const fileDBname = 'figureList.json';
 
 exports.getFigures = (req, res, next) => {
-  const file = fs.readFile('./dev-data/figureList.json', 'utf-8', (err, data) => {
+  const file = fs.readFile(`./dev-data/${fileDBname}`, 'utf-8', (err, data) => {
     if (err) throw err;
     const figureList = JSON.parse(data);
-    console.log(`find ${figureList.length} figures on list`);
-    res.body = figureList;
     res.json(figureList);
   });
 };
