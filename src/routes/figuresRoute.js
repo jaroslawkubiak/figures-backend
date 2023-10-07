@@ -1,8 +1,13 @@
 const express = require('express');
-const Figures = require(`../controllers/figuresController`);
+const figuresController = require(`../controllers/figuresController`);
 
 const router = express.Router();
 
-router.get('/', Figures.getAllFigures);
+router.get('/', figuresController.getAllFigures);
+router.get('/getFigureInfo/:number', figuresController.getFigureInfo);
+router.get('/edit/:id', figuresController.editFigure);
+router.post('/add', figuresController.addFigure);
+
+
 
 module.exports = router;
