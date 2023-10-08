@@ -1,5 +1,7 @@
 const pool = require('../config/database');
 const OAuth = require('oauth');
+const dotenv = require('dotenv');
+dotenv.config();
 
 exports.getAllFigures = async (req, res) => {
   // console.log('getting all figures');
@@ -26,17 +28,45 @@ exports.addFigure = async (req, res) => {
 
 // fetching for all figure data to add
 exports.getFigureInfo = async (req, res) => {
+  let figureInfo = {};
   const searchingNumber = req.params.number;
-  const ConsumerKey = '636AAA42B8894372873941C792A678F2';
-  const ConsumerSecret = '08BB0A38BB9745A4B10531446D38BACC';
-  const TokenValue = 'E8555852685F487FAE456F1B8DE30A4E';
-  const TokenSecret = 'D33AD7FAC5AB4182A9A23FE17452FAA9';
-  const BASE_URL = 'https://api.bricklink.com/api/store/v1';
-  const oauth = new OAuth.OAuth('', '', ConsumerKey, ConsumerSecret, '1.0', null, 'HMAC-SHA1');
 
-  oauth.get(`${BASE_URL}/items/MINIFIG/${searchingNumber}`, TokenValue, TokenSecret, function (error, data, response) {
-    if (error) console.error(error);
-    const dane = JSON.parse(data);
-    res.send(dane.data);
-  });
+  const oauth = new OAuth.OAuth(
+    '',
+    '',
+    process.env.BL_ConsumerKey,
+    process.env.BL_ConsumerSecret,
+    '1.0',
+    null,
+    'HMAC-SHA1'
+  );
+
+  let fetchForFigureInfo = function (url) {
+    return new Promise((resolve, reject) => {
+      oauth.get(url, process.env.BL_TokenValue, process.env.BL_TokenSecret, function (error, data, response) {
+        if (error) reject(error);
+        else {
+          const dane = JSON.parse(data);
+          resolve(dane.data);
+        }
+      });
+    });
+  };
+
+  let promises = [];
+  // fetch for general info about figure
+  promises.push(fetchForFigureInfo(`${process.env.BL_BASE_URL}/items/MINIFIG/${searchingNumber}`));
+  // fetch for pricing info
+  promises.push(fetchForFigureInfo(`${process.env.BL_BASE_URL}/items/MINIFIG/${searchingNumber}/price`));
+
+  Promise.all(promises)
+    .then(result => {
+      //setting up info
+      figureInfo.info = result[0];
+      //remove price details array
+      // result[1].price_detail = '';
+      figureInfo.price = result[1];
+      res.send(figureInfo);
+    })
+    .catch(err => console.log(err));
 };
