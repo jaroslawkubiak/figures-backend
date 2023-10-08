@@ -17,13 +17,48 @@ exports.editFigure = async (req, res) => {
 };
 
 exports.addFigure = async (req, res) => {
-  // console.log('addFigure req=', req.body);
-  const { number, series } = req.body;
-  console.log(number, series);
+  const {
+    number,
+    series,
+    mainName,
+    additionalName,
+    releaseYear,
+    bricklink,
+    purchasePrice,
+    weapon,
+    purchaseDate,
+    bricklinkPrice,
+  } = req.body;
 
-  await pool.query(`INSERT INTO figures (number, series) VALUES (?, ?)`, [number, series]);
+  //changing on to 1
+  label = req.body.label === 'on' ? 1 : 0;
 
-  res.status(201).send('fig added.');
+  //extracting purchase month and year from data
+  const tempDate = purchaseDate.split('-');
+  const purchaseMonth = Number(tempDate[1]);
+  const purchaseYear = Number(tempDate[2]);
+
+  await pool.query(
+    `INSERT INTO figures (series, number, releaseYear, mainName, additionalName,label, bricklink, purchasePrice, purchaseDate,purchaseMonth, purchaseYear, weapon, bricklinkPrice) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      series,
+      number,
+      releaseYear,
+      mainName,
+      additionalName,
+      label,
+      bricklink,
+      Number(purchasePrice),
+      purchaseDate,
+      purchaseMonth,
+      purchaseYear,
+      weapon,
+      Number(bricklinkPrice),
+    ]
+  );
+
+  res.status(201).send('Figure has been added to DB');
 };
 
 // fetching for all figure data to add
