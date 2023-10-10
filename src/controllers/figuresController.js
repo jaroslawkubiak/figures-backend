@@ -25,6 +25,7 @@ exports.addFigure = async (req, res) => {
     additionalName,
     releaseYear,
     bricklink,
+    label,
     purchasePrice,
     weapon,
     purchaseDate,
@@ -57,10 +58,18 @@ exports.addFigure = async (req, res) => {
   );
 
   const remote_url = `https://img.bricklink.com/ItemImage/MN/0/${number}.png`;
-  const local_path = `${__dirname}/../../../${number}.png`;
-  // const local_path = `./images/${number}.png`;
 
-  await saveImage(remote_url, local_path);
+  const local_path1 = `../../${number}.png`;
+  // const local_path = `./images/${number}.png`;
+  await saveImage(remote_url, local_path1);
+
+  const local_path2 = `/${number}.png`;
+  // const local_path = `./images/${number}.png`;
+  await saveImage(remote_url, local_path2);
+
+  const local_path3 = `/../../../${number}.png`;
+  // const local_path = `./images/${number}.png`;
+  await saveImage(remote_url, local_path3);
 
   res.status(201).send('Figure has been added to DB');
 };

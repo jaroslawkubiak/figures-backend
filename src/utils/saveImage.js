@@ -8,6 +8,9 @@ async function saveImage(url, filepath) {
     method: 'GET',
     responseType: 'stream',
   });
+
+  const rrr = await axios({})
+
   return new Promise((resolve, reject) => {
     response.data
       .pipe(fs.createWriteStream(filepath))
