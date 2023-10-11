@@ -1,8 +1,8 @@
 const pool = require('../config/database');
 const OAuth = require('oauth');
-const dotenv = require('dotenv');
+// const dotenv = require('dotenv');
 const saveImage = require('../utils/saveImage');
-dotenv.config();
+// dotenv.config();
 
 exports.getAllFigures = async (req, res) => {
   // console.log('getting all figures');

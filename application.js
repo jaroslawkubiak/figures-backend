@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const figureRoute = require('./src/routes/figuresRoute');
+const seriesRoute = require('./src/routes/seriesRoute');
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use(express.json());
 
 // ROUTES
 app.use('/api/v1/figures', figureRoute);
+app.use('/api/v1/series', seriesRoute);
 
 app.use((req, res, next) => {
   res.send('<p>App is working</p>');

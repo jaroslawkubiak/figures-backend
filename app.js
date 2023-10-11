@@ -1,11 +1,11 @@
-const dotenv = require('dotenv');
+// const dotenv = require('dotenv');
 
 process.on('uncaughtException', err => {
   console.log('UNCAUGHT EXCEPTION! 💥 Shutting down...');
   console.log(err.name, '⛔', err.message);
   process.exit(1);
 });
-dotenv.config();
+// dotenv.config();
 
 const app = require('./application');
 const port = process.env.PORT || 3001;
