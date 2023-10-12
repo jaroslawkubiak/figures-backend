@@ -1,61 +1,9 @@
 const pool = require('../config/database');
 const OAuth = require('oauth');
 const saveImage = require('../utils/saveImage');
+const extractFromDate = require('../utils/extractFromDate');
 
-exports.getAllFigures = async (req, res) => {
-  // console.log('getting all figures');
-  const [rows] = await pool.query('SELECT * FROM figures ORDER BY id DESC');
-  res.status(200).send(rows);
-};
-
-exports.editFigure = async (req, res) => {
-  const figureToEdit = req.params.id;
-  const {
-    series,
-    mainName,
-    additionalName,
-    releaseYear,
-    bricklink,
-    label,
-    purchasePrice,
-    weapon,
-    purchaseDate,
-    bricklinkPrice,
-  } = req.body;
-
-  //extracting purchase month and year from data
-  const tempDate = purchaseDate.split('-');
-  const purchaseMonth = Number(tempDate[1]);
-  const purchaseYear = Number(tempDate[2]);
-
-  const [row] = await pool.query('SELECT id FROM figures WHERE id = ?', [figureToEdit]);
-  // id is correct - update figure
-  if (row[0]) {
-    await pool.query(
-      `UPDATE figures SET 
-      series = ?, mainName = ?, additionalName = ?, releaseYear = ?, bricklink = ?, label = ?,
-      purchasePrice = ?, weapon = ?, purchaseDate = ?, bricklinkPrice = ?, purchaseMonth = ?, purchaseYear = ?
-      WHERE id = ?`,
-      [
-        series,
-        mainName,
-        additionalName,
-        releaseYear,
-        bricklink,
-        label,
-        purchasePrice,
-        weapon,
-        purchaseDate,
-        bricklinkPrice,
-        purchaseMonth,
-        purchaseYear,
-        figureToEdit,
-      ]
-    );
-    res.send('Figure updated');
-  } else res.status(200).send('Incorrect id.');
-};
-
+// adding figure to DB
 exports.addFigure = async (req, res) => {
   const {
     number,
@@ -72,9 +20,7 @@ exports.addFigure = async (req, res) => {
   } = req.body;
 
   //extracting purchase month and year from data
-  const tempDate = purchaseDate.split('-');
-  const purchaseMonth = Number(tempDate[1]);
-  const purchaseYear = Number(tempDate[2]);
+  const extractedDateParts = extractFromDate(purchaseDate);
 
   await pool.query(
     `INSERT INTO figures (series, number, releaseYear, mainName, additionalName,label, bricklink, purchasePrice, purchaseDate,purchaseMonth, purchaseYear, weapon, bricklinkPrice) 
@@ -89,8 +35,8 @@ exports.addFigure = async (req, res) => {
       bricklink,
       Number(purchasePrice),
       purchaseDate,
-      purchaseMonth,
-      purchaseYear,
+      extractedDateParts.purchaseMonth,
+      extractedDateParts.purchaseYear,
       weapon,
       Number(bricklinkPrice),
     ]
@@ -114,7 +60,64 @@ exports.addFigure = async (req, res) => {
   res.status(201).send('Figure has been added to DB');
 };
 
-// fetching for all figure data to add
+// editing figure in DB
+exports.editFigure = async (req, res) => {
+  const figureToEdit = req.params.id;
+  const {
+    series,
+    mainName,
+    additionalName,
+    releaseYear,
+    bricklink,
+    label,
+    purchasePrice,
+    weapon,
+    purchaseDate,
+    bricklinkPrice,
+  } = req.body;
+
+  //extracting purchase month and year from data
+  const extractedDateParts = extractFromDate(purchaseDate);
+
+  const [row] = await pool.query('SELECT id FROM figures WHERE id = ?', [figureToEdit]);
+  // id is correct - update figure
+  if (row[0]) {
+    await pool.query(
+      `UPDATE figures SET 
+      series = ?, mainName = ?, additionalName = ?, releaseYear = ?, bricklink = ?, label = ?,
+      purchasePrice = ?, weapon = ?, purchaseDate = ?, bricklinkPrice = ?, purchaseMonth = ?, purchaseYear = ?
+      WHERE id = ?`,
+      [
+        series,
+        mainName,
+        additionalName,
+        releaseYear,
+        bricklink,
+        label,
+        purchasePrice,
+        weapon,
+        purchaseDate,
+        bricklinkPrice,
+        extractedDateParts.purchaseMonth,
+        extractedDateParts.purchaseYear,
+        figureToEdit,
+      ]
+    );
+    res.send('Figure updated');
+  } else res.status(200).send('Incorrect id.');
+};
+
+// deleting figure from DB
+exports.deleteFigure = async (req, res) => {
+  const figureToDelete = req.params.id;
+  const [row] = await pool.query('DELETE FROM figures WHERE id = ?', [figureToDelete]);
+  // id is correct - update figure
+  if (row[0]) {
+    res.send('Figure deleted');
+  } else res.status(200).send('Incorrect id.');
+};
+
+// fetching for all figure data from Bricklink API to use ind figure adding form
 exports.getFigureInfo = async (req, res) => {
   let figureInfo = {};
   const searchingNumber = req.params.number;
@@ -158,4 +161,11 @@ exports.getFigureInfo = async (req, res) => {
       res.send(figureInfo);
     })
     .catch(err => console.log(err));
+};
+
+// getting list of all figures in DB
+exports.getAllFigures = async (req, res) => {
+  // console.log('getting all figures');
+  const [rows] = await pool.query('SELECT * FROM figures ORDER BY id DESC');
+  res.status(200).send(rows);
 };
