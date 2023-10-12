@@ -1,8 +1,6 @@
 const pool = require('../config/database');
 const OAuth = require('oauth');
-// const dotenv = require('dotenv');
 const saveImage = require('../utils/saveImage');
-// dotenv.config();
 
 exports.getAllFigures = async (req, res) => {
   // console.log('getting all figures');
@@ -11,10 +9,51 @@ exports.getAllFigures = async (req, res) => {
 };
 
 exports.editFigure = async (req, res) => {
-  console.log('editfigure = szukam id = ', req.params.id);
-  const [row] = await pool.query('SELECT * FROM figures WHERE id = ?', [req.params.id]);
-  if (row[0]) res.send(row[0]);
-  else res.status(200).send('Incorrect id.');
+  const figureToEdit = req.params.id;
+  const {
+    series,
+    mainName,
+    additionalName,
+    releaseYear,
+    bricklink,
+    label,
+    purchasePrice,
+    weapon,
+    purchaseDate,
+    bricklinkPrice,
+  } = req.body;
+
+  //extracting purchase month and year from data
+  const tempDate = purchaseDate.split('-');
+  const purchaseMonth = Number(tempDate[1]);
+  const purchaseYear = Number(tempDate[2]);
+
+  const [row] = await pool.query('SELECT id FROM figures WHERE id = ?', [figureToEdit]);
+  // id is correct - update figure
+  if (row[0]) {
+    await pool.query(
+      `UPDATE figures SET 
+      series = ?, mainName = ?, additionalName = ?, releaseYear = ?, bricklink = ?, label = ?,
+      purchasePrice = ?, weapon = ?, purchaseDate = ?, bricklinkPrice = ?, purchaseMonth = ?, purchaseYear = ?
+      WHERE id = ?`,
+      [
+        series,
+        mainName,
+        additionalName,
+        releaseYear,
+        bricklink,
+        label,
+        purchasePrice,
+        weapon,
+        purchaseDate,
+        bricklinkPrice,
+        purchaseMonth,
+        purchaseYear,
+        figureToEdit,
+      ]
+    );
+    res.send('Figure updated');
+  } else res.status(200).send('Incorrect id.');
 };
 
 exports.addFigure = async (req, res) => {
@@ -57,19 +96,20 @@ exports.addFigure = async (req, res) => {
     ]
   );
 
-  const remote_url = `https://img.bricklink.com/ItemImage/MN/0/${number}.png`;
+  // how to save img from bricklink to my server?
+  // const remote_url = `https://img.bricklink.com/ItemImage/MN/0/${number}.png`;
 
-  const local_path1 = `../../${number}.png`;
-  // const local_path = `./images/${number}.png`;
-  await saveImage(remote_url, local_path1);
+  // const local_path1 = `../../${number}.png`;
+  // // const local_path = `./images/${number}.png`;
+  // await saveImage(remote_url, local_path1);
 
-  const local_path2 = `/${number}.png`;
-  // const local_path = `./images/${number}.png`;
-  await saveImage(remote_url, local_path2);
+  // const local_path2 = `/${number}.png`;
+  // // const local_path = `./images/${number}.png`;
+  // await saveImage(remote_url, local_path2);
 
-  const local_path3 = `/../../../${number}.png`;
-  // const local_path = `./images/${number}.png`;
-  await saveImage(remote_url, local_path3);
+  // const local_path3 = `/../../../${number}.png`;
+  // // const local_path = `./images/${number}.png`;
+  // await saveImage(remote_url, local_path3);
 
   res.status(201).send('Figure has been added to DB');
 };
