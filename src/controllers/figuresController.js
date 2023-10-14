@@ -2,6 +2,8 @@ const pool = require('../config/database');
 const OAuth = require('oauth');
 const saveImage = require('../utils/saveImage');
 const extractFromDate = require('../utils/extractFromDate');
+const getSeriesId = require('../utils/getSeriesId');
+require('dotenv').config();
 
 // adding figure to DB
 exports.addFigure = async (req, res) => {
@@ -19,14 +21,17 @@ exports.addFigure = async (req, res) => {
     bricklinkPrice,
   } = req.body;
 
+  // fetching for series id
+  const seriesID = await getSeriesId(series);
+
   //extracting purchase month and year from data
   const extractedDateParts = extractFromDate(purchaseDate);
 
   await pool.query(
-    `INSERT INTO figures (series, number, releaseYear, mainName, additionalName,label, bricklink, purchasePrice, purchaseDate,purchaseMonth, purchaseYear, weapon, bricklinkPrice) 
+    `INSERT INTO figures (seriesID, number, releaseYear, mainName, additionalName,label, bricklink, purchasePrice, purchaseDate,purchaseMonth, purchaseYear, weapon, bricklinkPrice)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
-      series,
+      seriesID,
       number,
       releaseYear,
       mainName,
@@ -76,6 +81,9 @@ exports.editFigure = async (req, res) => {
     bricklinkPrice,
   } = req.body;
 
+  // fetching for series id
+  const seriesID = await getSeriesId(series);
+
   //extracting purchase month and year from data
   const extractedDateParts = extractFromDate(purchaseDate);
 
@@ -84,11 +92,11 @@ exports.editFigure = async (req, res) => {
   if (row[0]) {
     await pool.query(
       `UPDATE figures SET 
-      series = ?, mainName = ?, additionalName = ?, releaseYear = ?, bricklink = ?, label = ?,
+      seriesID = ?, mainName = ?, additionalName = ?, releaseYear = ?, bricklink = ?, label = ?,
       purchasePrice = ?, weapon = ?, purchaseDate = ?, bricklinkPrice = ?, purchaseMonth = ?, purchaseYear = ?
       WHERE id = ?`,
       [
-        series,
+        seriesID,
         mainName,
         additionalName,
         releaseYear,
@@ -166,6 +174,11 @@ exports.getFigureInfo = async (req, res) => {
 // getting list of all figures in DB
 exports.getAllFigures = async (req, res) => {
   // console.log('getting all figures');
-  const [rows] = await pool.query('SELECT * FROM figures ORDER BY id DESC');
+  const [rows] = await pool.query(
+    `SELECT figures.*, series.name as series 
+    FROM figures 
+    INNER JOIN series ON figures.seriesID=series.id
+    ORDER BY figures.id DESC`
+  );
   res.status(200).send(rows);
 };

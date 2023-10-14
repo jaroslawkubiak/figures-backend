@@ -14,7 +14,12 @@ app.use(helmet());
 
 app.use((err, req, res, next) => {
   console.log(err.stack);
-  res.status(500).send('Something broke!');
+  console.log(err.name);
+  console.log(err.code);
+
+  res.status(500).json({
+    message: 'Something broke!',
+  });
 });
 
 // Body parser, reading data from body into req.body
@@ -25,7 +30,7 @@ app.use('/api/v1/figures', figureRoute);
 app.use('/api/v1/series', seriesRoute);
 
 app.use((req, res, next) => {
-  res.send('<p>App is working</p>');
+  res.send('<h3>App is working</h3>');
   next();
 });
 
