@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: './16fee4d2c7ebfdff438a892abe812/.env' });
 
 process.on('uncaughtException', err => {
   console.log('UNCAUGHT EXCEPTION! 💥 Shutting down...');

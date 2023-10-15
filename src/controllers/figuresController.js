@@ -1,6 +1,6 @@
 const pool = require('../config/database');
 const OAuth = require('oauth');
-const saveImage = require('../utils/saveImage');
+const sendImageToFtp = require('../utils/sendImageToFtp');
 const extractFromDate = require('../utils/extractFromDate');
 const getSeriesId = require('../utils/getSeriesId');
 require('dotenv').config();
@@ -47,20 +47,8 @@ exports.addFigure = async (req, res) => {
     ]
   );
 
-  // how to save img from bricklink to my server?
-  // const remote_url = `https://img.bricklink.com/ItemImage/MN/0/${number}.png`;
-
-  // const local_path1 = `../../${number}.png`;
-  // // const local_path = `./images/${number}.png`;
-  // await saveImage(remote_url, local_path1);
-
-  // const local_path2 = `/${number}.png`;
-  // // const local_path = `./images/${number}.png`;
-  // await saveImage(remote_url, local_path2);
-
-  // const local_path3 = `/../../../${number}.png`;
-  // // const local_path = `./images/${number}.png`;
-  // await saveImage(remote_url, local_path3);
+  // save img from bricklink to my server
+  sendImageToFtp(number);
 
   res.status(201).send('Figure has been added to DB');
 };

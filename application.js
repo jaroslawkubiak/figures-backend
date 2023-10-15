@@ -3,8 +3,9 @@ const cors = require('cors');
 const helmet = require('helmet');
 const figureRoute = require('./src/routes/figuresRoute');
 const seriesRoute = require('./src/routes/seriesRoute');
-
+const createDate = require('./src/utils/createDate');
 const app = express();
+const sendImageToFtp = require('./src/utils/sendImageToFtp');
 
 // implement cors
 app.use(cors());
@@ -29,8 +30,9 @@ app.use(express.json());
 app.use('/api/v1/figures', figureRoute);
 app.use('/api/v1/series', seriesRoute);
 
+const today = createDate();
 app.use((req, res, next) => {
-  res.send('<h3>App is working</h3>');
+  res.send(`<h1>App is working since ${today}</h1>`);
   next();
 });
 
