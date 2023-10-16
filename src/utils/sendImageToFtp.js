@@ -1,11 +1,9 @@
 const jsftp = require('jsftp');
-const fs = require('fs');
 const axios = require('axios');
 require('dotenv').config({ path: '../../16fee4d2c7ebfdff438a892abe812/.env' });
 
 //saving image to ftp
 async function sendImageToFtp(figureNumber) {
-  // console.log(`sending figure ${figureNumber} image to ftp`);
   const ftp = new jsftp({
     host: process.env.FTP_HOST,
     port: process.env.FTP_PORT,

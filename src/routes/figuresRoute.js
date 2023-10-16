@@ -4,8 +4,8 @@ const router = express.Router();
 
 router.get('/', figuresController.getAllFigures);
 router.get('/getFigureInfo/:number', figuresController.getFigureInfo);
-router.patch('/edit/:id', figuresController.editFigure);
-router.post('/add', figuresController.addFigure);
-router.delete('/delete/:id', figuresController.deleteFigure);
+router.post('/', figuresController.addFigure);
+router.put('/:id', figuresController.editFigure);
+router.delete('/:id', figuresController.deleteFigure);
 
 module.exports = router;
