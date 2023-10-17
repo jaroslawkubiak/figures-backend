@@ -4,6 +4,8 @@ const sendImageToFtp = require('../utils/sendImageToFtp');
 const extractFromDate = require('../utils/extractFromDate');
 const getSeriesId = require('../utils/getSeriesId');
 require('dotenv').config();
+const deleteImageFromFtp = require('../utils/deleteImageFromFtp');
+const getFigureNumber = require('../utils/getFigureNumber');
 
 // adding figure to DB
 exports.addFigure = async (req, res) => {
@@ -55,62 +57,84 @@ exports.addFigure = async (req, res) => {
 
 // editing figure in DB
 exports.editFigure = async (req, res) => {
-  const figureToEdit = req.params.id;
-  const {
-    series,
-    mainName,
-    additionalName,
-    releaseYear,
-    bricklink,
-    label,
-    purchasePrice,
-    weapon,
-    purchaseDate,
-    bricklinkPrice,
-  } = req.body;
+  try {
+    const figureToEdit = req.params.id;
+    const {
+      series,
+      mainName,
+      additionalName,
+      releaseYear,
+      bricklink,
+      label,
+      purchasePrice,
+      weapon,
+      purchaseDate,
+      bricklinkPrice,
+    } = req.body;
 
-  // fetching for series id
-  const seriesID = await getSeriesId(series);
+    // fetching for series id
+    const seriesID = await getSeriesId(series);
 
-  //extracting purchase month and year from data
-  const extractedDateParts = extractFromDate(purchaseDate);
+    //extracting purchase month and year from data
+    const extractedDateParts = extractFromDate(purchaseDate);
 
-  const [row] = await pool.query('SELECT id FROM figures WHERE id = ?', [figureToEdit]);
-  // id is correct - update figure
-  if (row[0]) {
-    await pool.query(
-      `UPDATE figures SET 
+    const [row] = await pool.query('SELECT id FROM figures WHERE id = ?', [figureToEdit]);
+    // id is correct - update figure
+    if (row[0]) {
+      await pool.query(
+        `UPDATE figures SET 
       seriesID = ?, mainName = ?, additionalName = ?, releaseYear = ?, bricklink = ?, label = ?,
       purchasePrice = ?, weapon = ?, purchaseDate = ?, bricklinkPrice = ?, purchaseMonth = ?, purchaseYear = ?
       WHERE id = ?`,
-      [
-        seriesID,
-        mainName,
-        additionalName,
-        releaseYear,
-        bricklink,
-        label,
-        purchasePrice,
-        weapon,
-        purchaseDate,
-        bricklinkPrice,
-        extractedDateParts.purchaseMonth,
-        extractedDateParts.purchaseYear,
-        figureToEdit,
-      ]
-    );
-    res.send('Figure updated');
-  } else res.status(200).send('Incorrect id.');
+        [
+          seriesID,
+          mainName,
+          additionalName,
+          releaseYear,
+          bricklink,
+          label,
+          purchasePrice,
+          weapon,
+          purchaseDate,
+          bricklinkPrice,
+          extractedDateParts.purchaseMonth,
+          extractedDateParts.purchaseYear,
+          figureToEdit,
+        ]
+      );
+      res.send('Figure updated');
+    } else res.status(200).send('Incorrect id.');
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 // deleting figure from DB
 exports.deleteFigure = async (req, res) => {
-  const figureToDelete = req.params.id;
-  const [row] = await pool.query('DELETE FROM figures WHERE id = ?', [figureToDelete]);
-  // id is correct - update figure
-  if (row[0]) {
-    res.send('Figure deleted');
-  } else res.status(200).send('Incorrect id.');
+  try {
+    const figureToDelete = req.params.id;
+
+    const promises = [];
+    // searching for figure number
+    promises.push(getFigureNumber(figureToDelete));
+    // deleting figure from DB
+    promises.push(pool.query('DELETE FROM figures WHERE id = ?', [figureToDelete]));
+
+    Promise.all(promises)
+      .then(result => {
+        const row = result[1];
+        // id is correct - delete figure
+        if (row[0]) {
+          // deleting figure image from FTP
+          deleteImageFromFtp(result[0]);
+
+          res.send('Figure deleted');
+        } else res.status(200).send('Incorrect id.');
+      })
+      .catch(err => console.log(err));
+  } catch (err) {
+    console.error(err);
+  }
 };
 
 // fetching for all figure data from Bricklink API to use ind figure adding form

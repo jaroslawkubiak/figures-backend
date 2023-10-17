@@ -19,7 +19,7 @@ async function sendImageToFtp(figureNumber) {
 
   ftp.put(buffer, remoteFtpPath, function (err) {
     if (err) console.error(err);
-    else console.log(`sending figure ${figureNumber} image to ftp was successful`);
+    else console.log(`Sending figure ${figureNumber} image to ftp was successful`);
   });
 }
 
