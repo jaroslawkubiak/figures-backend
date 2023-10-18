@@ -49,10 +49,13 @@ exports.addFigure = async (req, res) => {
     ]
   );
 
+  const LAST_INSERT_ID = await pool.query(`SELECT LAST_INSERT_ID()`);
+  const lastFigureId = LAST_INSERT_ID[0][0]['LAST_INSERT_ID()'];
+
   // save img from bricklink to my server
   sendImageToFtp(number);
 
-  res.status(201).send('Figure has been added to DB');
+  res.status(201).json({ message: 'Figure added', type: 'add', lastFigureId, seriesID });
 };
 
 // editing figure in DB
@@ -102,8 +105,8 @@ exports.editFigure = async (req, res) => {
           figureToEdit,
         ]
       );
-      res.send('Figure updated');
-    } else res.status(200).send('Incorrect id.');
+      res.json({ message: 'Figure updated', type: 'edit' });
+    } else res.status(400).json({ message: 'Fail to edit', type: 'error' });
   } catch (err) {
     console.log(err);
   }
@@ -120,18 +123,16 @@ exports.deleteFigure = async (req, res) => {
     // deleting figure from DB
     promises.push(pool.query('DELETE FROM figures WHERE id = ?', [figureToDelete]));
 
-    Promise.all(promises)
-      .then(result => {
-        const row = result[1];
-        // id is correct - delete figure
-        if (row[0]) {
-          // deleting figure image from FTP
-          deleteImageFromFtp(result[0]);
+    Promise.all(promises).then(result => {
+      const row = result[1];
+      // id is correct - delete figure
+      if (row[0]) {
+        // deleting figure image from FTP
+        deleteImageFromFtp(result[0]);
 
-          res.send('Figure deleted');
-        } else res.status(200).send('Incorrect id.');
-      })
-      .catch(err => console.log(err));
+        res.status(200).json({ message: 'Figure removed', type: 'delete' });
+      } else res.status(400).json({ message: 'Fail to delete', type: 'error' });
+    });
   } catch (err) {
     console.error(err);
   }
@@ -185,7 +186,6 @@ exports.getFigureInfo = async (req, res) => {
 
 // getting list of all figures in DB
 exports.getAllFigures = async (req, res) => {
-  // console.log('getting all figures');
   const [rows] = await pool.query(
     `SELECT figures.*, series.name as series 
     FROM figures 

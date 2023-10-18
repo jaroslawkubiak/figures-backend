@@ -9,3 +9,4 @@ module.exports = pool = mysql
     database: process.env.DB_NAME,
   })
   .promise();
+
