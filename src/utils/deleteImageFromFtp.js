@@ -10,11 +10,26 @@ async function deleteImageFromFtp(number) {
     pass: process.env.FTP_PASSWORD,
   });
 
-  const remoteFtpPath = `/portfolio/figures/static/media/${number}.png`;
+  const remoteFtpDir = `/portfolio/figures/static/media`;
 
-  ftp.raw('dele', remoteFtpPath, function (err) {
-    if (err) console.error(err);
-    else console.log(`Delete figure ${number} image from ftp was successful`);
+  //creating image list from FTP
+  ftp.list(remoteFtpDir, (err, res) => {
+    const imageListAsString = res.split('\n');
+    imageListAsString.shift();
+    imageListAsString.shift();
+
+    const imageList = imageListAsString.map(el => {
+      return el.split(' ').pop().trim();
+    });
+    const fileToDelete = imageList.filter(el => el.includes(number));
+    const remoteFtpPath = `/portfolio/figures/static/media/${fileToDelete[0]}`;
+
+    //deleting file if exists
+    if (remoteFtpPath) {
+      ftp.raw('dele', remoteFtpPath, function (err) {
+        if (err) console.error(err);
+      });
+    }
   });
 }
 module.exports = deleteImageFromFtp;
