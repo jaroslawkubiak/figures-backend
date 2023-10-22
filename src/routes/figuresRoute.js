@@ -6,6 +6,7 @@ router.get('/', figuresController.getAllFigures);
 router.get('/getFigureInfo/:number', figuresController.getFigureInfo);
 router.post('/', figuresController.addFigure);
 router.put('/:id', figuresController.editFigure);
+router.patch('/:id', figuresController.editFigureLink);
 router.delete('/:id', figuresController.deleteFigure);
 router.get('/image/:number', figuresController.getFigureImage);
 

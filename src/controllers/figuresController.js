@@ -31,9 +31,11 @@ exports.addFigure = async (req, res) => {
   //extracting purchase month and year from data
   const extractedDateParts = extractFromDate(purchaseDate);
 
+  const imageLink = `https://img.bricklink.com/ItemImage/MN/0/${number}.png`;
+
   await pool.query(
-    `INSERT INTO figures (seriesID, number, releaseYear, mainName, additionalName,label, bricklink, purchasePrice, purchaseDate,purchaseMonth, purchaseYear, weapon, bricklinkPrice)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO figures (seriesID, number, releaseYear, mainName, additionalName,label, bricklink, imageLink, purchasePrice, purchaseDate,purchaseMonth, purchaseYear, weapon, bricklinkPrice)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       seriesID,
       number,
@@ -42,6 +44,7 @@ exports.addFigure = async (req, res) => {
       additionalName,
       label,
       bricklink,
+      imageLink,
       Number(purchasePrice),
       purchaseDate,
       extractedDateParts.purchaseMonth,
@@ -107,11 +110,28 @@ exports.editFigure = async (req, res) => {
           figureToEdit,
         ]
       );
-      res.json({ message: 'Figure updated', type: 'edit' });
+      res.status(200).json({ message: 'Figure updated', type: 'edit' });
     } else res.status(400).json({ message: 'Fail to edit', type: 'error' });
   } catch (err) {
     console.log(err);
   }
+};
+
+// update figure image link
+exports.editFigureLink = async (req, res) => {
+  const figId = req.params.id;
+  const { number } = req.body;
+  const imageLink = `https://jaroslawkubiak.pl/portfolio/figures/static/media/${number}.png`;
+  pool
+    .query(`UPDATE figures SET imageLink = ? WHERE id = ?`, [imageLink, figId])
+    .then(() => {
+      res.status(200).json({ message: 'Image link updated', type: 'edit' });
+    })
+    .catch(error => {
+      res.status(400).json({ message: 'Fail to edit image link', type: 'error', error });
+    });
+
+  sendImageToFtp(number);
 };
 
 // deleting figure from DB
@@ -196,6 +216,7 @@ exports.getAllFigures = async (req, res) => {
   );
   res.status(200).send(rows);
 };
+
 // check if figure image exist on FTP
 exports.getFigureImage = async (req, res) => {
   const numberToCheck = req.params.number;
