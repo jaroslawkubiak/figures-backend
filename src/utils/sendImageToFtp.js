@@ -4,6 +4,7 @@ require('dotenv').config({ path: '../../16fee4d2c7ebfdff438a892abe812/.env' });
 
 //saving image to ftp
 async function sendImageToFtp(figureNumber) {
+  // console.log(`sending ${figureNumber} to FTP`);
   const ftp = new jsftp({
     host: process.env.FTP_HOST,
     port: process.env.FTP_PORT,

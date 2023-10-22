@@ -1,5 +1,4 @@
 const jsftp = require('jsftp');
-const axios = require('axios');
 require('dotenv').config({ path: '../../16fee4d2c7ebfdff438a892abe812/.env' });
 
 async function deleteImageFromFtp(number) {

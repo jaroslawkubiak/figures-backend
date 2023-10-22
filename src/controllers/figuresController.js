@@ -6,6 +6,8 @@ const getSeriesId = require('../utils/getSeriesId');
 require('dotenv').config();
 const deleteImageFromFtp = require('../utils/deleteImageFromFtp');
 const getFigureNumber = require('../utils/getFigureNumber');
+const jsftp = require('jsftp');
+require('dotenv').config({ path: '../../16fee4d2c7ebfdff438a892abe812/.env' });
 
 // adding figure to DB
 exports.addFigure = async (req, res) => {
@@ -193,4 +195,23 @@ exports.getAllFigures = async (req, res) => {
     ORDER BY figures.id DESC`
   );
   res.status(200).send(rows);
+};
+// check if figure image exist on FTP
+exports.getFigureImage = async (req, res) => {
+  const numberToCheck = req.params.number;
+  const ftp = new jsftp({
+    host: process.env.FTP_HOST,
+    port: process.env.FTP_PORT,
+    user: process.env.FTP_USER_NAME,
+    pass: process.env.FTP_PASSWORD,
+  });
+  const remoteFtpDir = `/portfolio/figures/static/media/${numberToCheck}`;
+
+  await ftp.get(remoteFtpDir, err => {
+    if (err) {
+      // if image don't exist on FTP - save this image from bricklink to FTP
+      sendImageToFtp(numberToCheck.slice(0, numberToCheck.length - 4));
+      res.status(400).send('error');
+    } else res.status(200).send('ok');
+  });
 };
