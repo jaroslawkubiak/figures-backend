@@ -3,7 +3,6 @@ const OAuth = require('oauth');
 const sendImageToFtp = require('../utils/sendImageToFtp');
 const extractFromDate = require('../utils/extractFromDate');
 const getSeriesId = require('../utils/getSeriesId');
-require('dotenv').config();
 const deleteImageFromFtp = require('../utils/deleteImageFromFtp');
 const getFigureNumber = require('../utils/getFigureNumber');
 const jsftp = require('jsftp');
@@ -124,15 +123,13 @@ exports.editFigure = async (req, res) => {
 exports.editFigureLink = async (req, res) => {
   const figId = req.params.id;
   const { number } = req.body;
-  const imageLink = `https://jaroslawkubiak.pl/portfolio/figures/static/media/${number}.png`;
+  const imageLink = `${process.env.SEND_FIGURE_SERVER}${process.env.SEND_FIGURE_DIRECTORY}/${number}.png`;
   pool
     .query(`UPDATE figures SET imageLink = ? WHERE id = ?`, [imageLink, figId])
     .then(() => {
-      console.log(`link updated : ${number}`);
       res.status(200).json({ message: 'Image link updated', type: 'edit' });
     })
     .catch(error => {
-      console.log(`🔥 ERROR link updated: ${number}`);
       res.status(400).json({ message: 'Fail to edit image link', type: 'error', error });
     });
   // sending image to FTP
@@ -235,8 +232,7 @@ exports.getFigureImage = async (req, res) => {
     user: process.env.FTP_USER_NAME,
     pass: process.env.FTP_PASSWORD,
   });
-  const remoteFtpDir = `/portfolio/figures/static/media/${numberToCheck}`;
-
+  const remoteFtpDir = `${process.env.SEND_FIGURE_DIRECTORY}/${numberToCheck}`;
   await ftp.get(remoteFtpDir, err => {
     if (err) {
       // if image don't exist on FTP - save this image from bricklink to FTP
