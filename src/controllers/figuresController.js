@@ -10,6 +10,7 @@ const jsftp = require('jsftp');
 require('dotenv').config({ path: '../../16fee4d2c7ebfdff438a892abe812/.env' });
 
 // adding figure to DB
+// router.post('/')
 exports.addFigure = async (req, res) => {
   const {
     number,
@@ -64,6 +65,7 @@ exports.addFigure = async (req, res) => {
 };
 
 // editing figure in DB
+// router.get('/getFigureInfo/:number')
 exports.editFigure = async (req, res) => {
   try {
     const figureToEdit = req.params.id;
@@ -117,7 +119,8 @@ exports.editFigure = async (req, res) => {
   }
 };
 
-// update figure image link
+// update figure image link in DB and send image to FTP
+// router.patch('/:id')
 exports.editFigureLink = async (req, res) => {
   const figId = req.params.id;
   const { number } = req.body;
@@ -125,16 +128,19 @@ exports.editFigureLink = async (req, res) => {
   pool
     .query(`UPDATE figures SET imageLink = ? WHERE id = ?`, [imageLink, figId])
     .then(() => {
+      console.log(`link updated : ${number}`);
       res.status(200).json({ message: 'Image link updated', type: 'edit' });
     })
     .catch(error => {
+      console.log(`🔥 ERROR link updated: ${number}`);
       res.status(400).json({ message: 'Fail to edit image link', type: 'error', error });
     });
-
+  // sending image to FTP
   sendImageToFtp(number);
 };
 
 // deleting figure from DB
+// router.delete('/:id')
 exports.deleteFigure = async (req, res) => {
   try {
     const figureToDelete = req.params.id;
@@ -161,6 +167,7 @@ exports.deleteFigure = async (req, res) => {
 };
 
 // fetching for all figure data from Bricklink API to use ind figure adding form
+// router.get('/getFigureInfo/:number')
 exports.getFigureInfo = async (req, res) => {
   let figureInfo = {};
   const searchingNumber = req.params.number;
@@ -207,6 +214,7 @@ exports.getFigureInfo = async (req, res) => {
 };
 
 // getting list of all figures in DB
+// router.get('/')
 exports.getAllFigures = async (req, res) => {
   const [rows] = await pool.query(
     `SELECT figures.*, series.name as series 
@@ -218,6 +226,7 @@ exports.getAllFigures = async (req, res) => {
 };
 
 // check if figure image exist on FTP
+// router.get('/image/:number')
 exports.getFigureImage = async (req, res) => {
   const numberToCheck = req.params.number;
   const ftp = new jsftp({
