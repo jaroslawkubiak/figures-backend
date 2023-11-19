@@ -30,10 +30,10 @@ app.use(express.json());
 app.use('/api/v1/figures', figureRoute);
 app.use('/api/v1/series', seriesRoute);
 
-// const today = createDate();
-// app.use((req, res, next) => {
-//   res.json({ message: `<h1>App is working since ${today}</h1>`});
-//   next();
-// });
+const today = createDate();
+app.use((req, res, next) => {
+  res.send(`<h1>App is working since ${today}</h1>`);
+  next();
+});
 
 module.exports = app;
