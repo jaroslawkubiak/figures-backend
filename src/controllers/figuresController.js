@@ -1,12 +1,12 @@
-const pool = require('../config/database');
-const OAuth = require('oauth');
-const sendImageToFtp = require('../utils/sendImageToFtp');
-const extractFromDate = require('../utils/extractFromDate');
-const getSeriesId = require('../utils/getSeriesId');
-const deleteImageFromFtp = require('../utils/deleteImageFromFtp');
-const getFigureNumber = require('../utils/getFigureNumber');
-const jsftp = require('jsftp');
-require('dotenv').config({ path: '../../16fee4d2c7ebfdff438a892abe812/.env' });
+const pool = require("../config/database");
+const OAuth = require("oauth");
+const sendImageToFtp = require("../utils/sendImageToFtp");
+const extractFromDate = require("../utils/extractFromDate");
+const getSeriesId = require("../utils/getSeriesId");
+const deleteImageFromFtp = require("../utils/deleteImageFromFtp");
+const getFigureNumber = require("../utils/getFigureNumber");
+const jsftp = require("jsftp");
+require("dotenv").config({ path: "../../16fee4d2c7ebfdff438a892abe812/.env" });
 
 // adding figure to DB
 // router.post('/')
@@ -55,16 +55,18 @@ exports.addFigure = async (req, res) => {
   );
 
   const LAST_INSERT_ID = await pool.query(`SELECT LAST_INSERT_ID()`);
-  const lastFigureId = LAST_INSERT_ID[0][0]['LAST_INSERT_ID()'];
+  const lastFigureId = LAST_INSERT_ID[0][0]["LAST_INSERT_ID()"];
 
   // save img from bricklink to my server
   sendImageToFtp(number);
 
-  res.status(201).json({ message: 'Figure added', type: 'add', lastFigureId, seriesID });
+  res
+    .status(201)
+    .json({ message: "Figure added", type: "add", lastFigureId, seriesID });
 };
 
 // editing figure in DB
-// router.get('/getFigureInfo/:number')
+// router.put('/:id');
 exports.editFigure = async (req, res) => {
   try {
     const figureToEdit = req.params.id;
@@ -87,7 +89,9 @@ exports.editFigure = async (req, res) => {
     //extracting purchase month and year from data
     const extractedDateParts = extractFromDate(purchaseDate);
 
-    const [row] = await pool.query('SELECT id FROM figures WHERE id = ?', [figureToEdit]);
+    const [row] = await pool.query("SELECT id FROM figures WHERE id = ?", [
+      figureToEdit,
+    ]);
     // id is correct - update figure
     if (row[0]) {
       await pool.query(
@@ -111,8 +115,8 @@ exports.editFigure = async (req, res) => {
           figureToEdit,
         ]
       );
-      res.status(200).json({ message: 'Figure updated', type: 'edit' });
-    } else res.status(400).json({ message: 'Fail to edit', type: 'error' });
+      res.status(200).json({ message: "Figure updated", type: "edit" });
+    } else res.status(400).json({ message: "Fail to edit", type: "error" });
   } catch (err) {
     console.log(err);
   }
@@ -127,10 +131,12 @@ exports.editFigureLink = async (req, res) => {
   pool
     .query(`UPDATE figures SET imageLink = ? WHERE id = ?`, [imageLink, figId])
     .then(() => {
-      res.status(200).json({ message: 'Image link updated', type: 'edit' });
+      res.status(200).json({ message: "Image link updated", type: "edit" });
     })
-    .catch(error => {
-      res.status(400).json({ message: 'Fail to edit image link', type: 'error', error });
+    .catch((error) => {
+      res
+        .status(400)
+        .json({ message: "Fail to edit image link", type: "error", error });
     });
   // sending image to FTP
   sendImageToFtp(number);
@@ -146,17 +152,19 @@ exports.deleteFigure = async (req, res) => {
     // searching for figure number
     promises.push(getFigureNumber(figureToDelete));
     // deleting figure from DB
-    promises.push(pool.query('DELETE FROM figures WHERE id = ?', [figureToDelete]));
+    promises.push(
+      pool.query("DELETE FROM figures WHERE id = ?", [figureToDelete])
+    );
 
-    Promise.all(promises).then(result => {
+    Promise.all(promises).then((result) => {
       const row = result[1];
       // id is correct - delete figure
       if (row[0]) {
         // deleting figure image from FTP
         deleteImageFromFtp(result[0]);
 
-        res.status(200).json({ message: 'Figure removed', type: 'delete' });
-      } else res.status(400).json({ message: 'Fail to delete', type: 'error' });
+        res.status(200).json({ message: "Figure removed", type: "delete" });
+      } else res.status(400).json({ message: "Fail to delete", type: "error" });
     });
   } catch (err) {
     console.error(err);
@@ -170,44 +178,57 @@ exports.getFigureInfo = async (req, res) => {
   const searchingNumber = req.params.number;
 
   const oauth = new OAuth.OAuth(
-    '',
-    '',
+    "",
+    "",
     process.env.BL_ConsumerKey,
     process.env.BL_ConsumerSecret,
-    '1.0',
+    "1.0",
     null,
-    'HMAC-SHA1'
+    "HMAC-SHA1"
   );
 
   //function for creating Promise to fetch for data
   const fetchForFigureInfo = function (url) {
     return new Promise((resolve, reject) => {
-      oauth.get(url, process.env.BL_TokenValue, process.env.BL_TokenSecret, function (error, data, response) {
-        if (error) reject(error);
-        else {
-          const dane = JSON.parse(data);
-          resolve(dane.data);
+      oauth.get(
+        url,
+        process.env.BL_TokenValue,
+        process.env.BL_TokenSecret,
+        function (error, data, response) {
+          if (error) reject(error);
+          else {
+            const dane = JSON.parse(data);
+            resolve(dane.data);
+          }
         }
-      });
+      );
     });
   };
 
   const promises = [];
   // fetch for general info about figure
-  promises.push(fetchForFigureInfo(`${process.env.BL_BASE_URL}/items/MINIFIG/${searchingNumber}`));
+  promises.push(
+    fetchForFigureInfo(
+      `${process.env.BL_BASE_URL}/items/MINIFIG/${searchingNumber}`
+    )
+  );
   // fetch for pricing info
-  promises.push(fetchForFigureInfo(`${process.env.BL_BASE_URL}/items/MINIFIG/${searchingNumber}/price`));
+  promises.push(
+    fetchForFigureInfo(
+      `${process.env.BL_BASE_URL}/items/MINIFIG/${searchingNumber}/price`
+    )
+  );
 
   Promise.all(promises)
-    .then(result => {
+    .then((result) => {
       //setting up info
       figureInfo.info = result[0];
       //remove price details array
-      result[1].price_detail = '';
+      result[1].price_detail = "";
       figureInfo.price = result[1];
       res.send(figureInfo);
     })
-    .catch(err => console.log(err));
+    .catch((err) => console.log(err));
 };
 
 // getting list of all figures in DB
@@ -233,11 +254,11 @@ exports.getFigureImage = async (req, res) => {
     pass: process.env.FTP_PASSWORD,
   });
   const remoteFtpDir = `${process.env.SEND_FIGURE_DIRECTORY}/${numberToCheck}`;
-  await ftp.get(remoteFtpDir, err => {
+  await ftp.get(remoteFtpDir, (err) => {
     if (err) {
       // if image don't exist on FTP - save this image from bricklink to FTP
       sendImageToFtp(numberToCheck.slice(0, numberToCheck.length - 4));
-      res.status(400).send('error');
-    } else res.status(200).send('ok');
+      res.status(400).send("error");
+    } else res.status(200).send("ok");
   });
 };
